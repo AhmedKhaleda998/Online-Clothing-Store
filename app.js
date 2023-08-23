@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 
 const productRoutes = require('./routes/product');
 const authRoutes = require('./routes/auth');
+const cartRoutes = require('./routes/cart');
+const orderRoutes = require('./routes/order');
 
 require('dotenv').config();
 
@@ -19,6 +21,8 @@ app.use((req, res, next) => {
 
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
+app.use('/cart', cartRoutes);
+app.use('/orders', orderRoutes);
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true }).then((result) => {
     app.listen(process.env.PORT, () => {

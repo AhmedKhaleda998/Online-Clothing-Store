@@ -1,7 +1,7 @@
 const Product = require('../models/product');
 const User = require('../models/user');
 
-exports.getAllProducts = async (req, res, next) => {
+exports.viewAll = async (req, res, next) => {
     try {
         const products = await Product.find();
         res.json({ message: 'Products fetched successfully', products });
@@ -10,11 +10,8 @@ exports.getAllProducts = async (req, res, next) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
-exports.createProduct = async (req, res, next) => {
+exports.create = async (req, res, next) => {
     try {
-        if (req.userRole !== 'admin') {
-            return res.status(403).json({ error: 'Not Authorized' });
-        }
         let creator;
         const { name, price, size, description, gender, collectionSeason, image } = req.body;
         const product = new Product({
@@ -39,7 +36,7 @@ exports.createProduct = async (req, res, next) => {
     }
 };
 
-exports.getProduct = async (req, res, next) => {
+exports.view = async (req, res, next) => {
     try {
         const productId = req.params.productId;
         const product = await Product.findById(productId);
@@ -53,11 +50,8 @@ exports.getProduct = async (req, res, next) => {
     }
 };
 
-exports.updateProduct = async (req, res, next) => {
+exports.update = async (req, res, next) => {
     try {
-        if (req.userRole !== 'admin') {
-            return res.status(403).json({ error: 'Not Authorized' });
-        }
         const productId = req.params.productId;
         const { name, price, size, description, gender, collectionSeason, image } = req.body;
         const product = await Product.findById(productId).populate('creator');
@@ -82,11 +76,8 @@ exports.updateProduct = async (req, res, next) => {
     }
 };
 
-exports.deleteProduct = async (req, res, next) => {
+exports.delete = async (req, res, next) => {
     try {
-        if (req.userRole !== 'admin') {
-            return res.status(403).json({ error: 'Not Authorized' });
-        }
         const productId = req.params.productId;
         const product = await Product.findById(productId);
         if (!product) {
@@ -98,6 +89,14 @@ exports.deleteProduct = async (req, res, next) => {
         await Product.findByIdAndRemove(productId);
         const user = await User.findById(req.userId);
         user.products.pull(productId);
+        const users = await User.find();
+        for (const user of users) {
+            const cartItemsToRemove = user.cart.filter(item => item.product.toString() === productId);
+            if (cartItemsToRemove.length > 0) {
+                user.cart = user.cart.filter(item => item.product.toString() !== productId);
+                await user.save();
+            }
+        }
         await user.save();
         res.json({ message: 'Product deleted successfully', product });
     } catch (error) {
