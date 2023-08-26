@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const Product = require('../models/product');
 const User = require('../models/user');
 
@@ -12,8 +15,12 @@ exports.viewAll = async (req, res, next) => {
 }
 exports.create = async (req, res, next) => {
     try {
+        if (!req.file) {
+            return res.status(422).json({ error: 'Image is required' });
+        }
         let creator;
-        const { name, price, size, description, gender, collectionSeason, image } = req.body;
+        const imageUrl = req.file.path.replace("\\", "/");
+        const { name, price, size, description, gender, collectionSeason } = req.body;
         const product = new Product({
             name,
             price,
@@ -21,7 +28,7 @@ exports.create = async (req, res, next) => {
             description,
             gender,
             collectionSeason,
-            image,
+            image: imageUrl,
             creator: req.userId
         });
         await product.save();
@@ -53,7 +60,8 @@ exports.view = async (req, res, next) => {
 exports.update = async (req, res, next) => {
     try {
         const productId = req.params.productId;
-        const { name, price, size, description, gender, collectionSeason, image } = req.body;
+        const { name, price, size, description, gender, collectionSeason } = req.body;
+        let imageUrl;
         const product = await Product.findById(productId).populate('creator');
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
@@ -61,13 +69,21 @@ exports.update = async (req, res, next) => {
         if (product.creator._id.toString() !== req.userId) {
             return res.status(403).json({ error: 'Not Authorized' });
         }
+        if (req.file) {
+            imageUrl = req.file.path.replace("\\", "/");
+        } else {
+            imageUrl = product.image;
+        }
+        if (imageUrl !== product.image) {
+            clearImage(product.image);
+        }
         product.name = name;
         product.price = price;
         product.size = size.split(',').map((s) => s.trim());
         product.description = description;
         product.gender = gender;
         product.collectionSeason = collectionSeason;
-        product.image = image;
+        product.image = imageUrl;
         await product.save();
         res.json({ message: 'Products updated successfully', product });
     } catch (error) {
@@ -87,6 +103,7 @@ exports.delete = async (req, res, next) => {
             return res.status(403).json({ error: 'Not Authorized' });
         }
         await Product.findByIdAndRemove(productId);
+        clearImage(product.image);
         const user = await User.findById(req.userId);
         user.products.pull(productId);
         const users = await User.find();
@@ -103,4 +120,9 @@ exports.delete = async (req, res, next) => {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
+};
+
+const clearImage = filePath => {
+    filePath = path.join(__dirname, '..', filePath);
+    fs.unlink(filePath, err => console.log(err));
 };
