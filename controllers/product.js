@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const { validationResult } = require('express-validator');
+
 const Product = require('../models/product');
 const User = require('../models/user');
 
@@ -14,13 +16,17 @@ exports.viewAll = async (req, res, next) => {
     }
 }
 exports.create = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ error: errors.array()[0].msg });
+    }
+    if (!req.file) {
+        return res.status(422).json({ error: 'Image is required' });
+    }
     try {
-        if (!req.file) {
-            return res.status(422).json({ error: 'Image is required' });
-        }
         let creator;
-        const imageUrl = req.file.path.replace("\\", "/");
         const { name, price, size, description, gender, collectionSeason } = req.body;
+        const imageUrl = req.file.path.replace("\\", "/");
         const product = new Product({
             name,
             price,
@@ -58,6 +64,10 @@ exports.view = async (req, res, next) => {
 };
 
 exports.update = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(422).json({ error: errors.array()[0].msg });
+    }
     try {
         const productId = req.params.productId;
         const { name, price, size, description, gender, collectionSeason } = req.body;
