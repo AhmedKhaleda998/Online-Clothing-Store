@@ -18,6 +18,7 @@ exports.viewAll = async (req, res, next) => {
 exports.create = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        clearImage(req.file.path.replace("\\", "/"));
         return res.status(422).json({ error: errors.array()[0].msg });
     }
     if (!req.file) {
