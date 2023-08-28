@@ -10,6 +10,8 @@ const productRoutes = require('./routes/product');
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/order');
+const contactRoutes = require('./routes/contact');
+
 const multerConfig = require('./configurations/multer');
 
 const app = express();
@@ -29,6 +31,7 @@ app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/cart', cartRoutes);
 app.use('/orders', orderRoutes);
+app.use('/contact', contactRoutes);
 
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
