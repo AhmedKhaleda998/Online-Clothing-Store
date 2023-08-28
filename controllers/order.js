@@ -23,6 +23,11 @@ exports.create = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+        const addressId = req.body.addressId;
+        const address = user.addresses.find((address) => address._id.toString() === addressId);
+        if (!address) {
+            return res.status(404).json({ error: 'Address not found' });
+        }
         const cartProducts = user.cart;
         let products = [];
         let totalAmount = 0;
@@ -44,6 +49,7 @@ exports.create = async (req, res) => {
             user: userId,
             products,
             totalAmount,
+            shippingAddress: address,
         });
         user.cart = [];
         await user.save();

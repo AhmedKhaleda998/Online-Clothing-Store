@@ -88,13 +88,13 @@ exports.update = async (req, res, next) => {
         if (imageUrl !== product.image) {
             clearImage(product.image);
         }
-        product.name = name;
+        product.name = name || product.name;
         product.price = price;
-        product.size = size.split(',').map((s) => s.trim());
-        product.description = description;
-        product.gender = gender;
-        product.collectionSeason = collectionSeason;
-        product.image = imageUrl;
+        product.size = size.split(',').map((s) => s.trim()) || product.size;
+        product.description = description || product.description;
+        product.gender = gender || product.gender;
+        product.collectionSeason = collectionSeason || product.collectionSeason;
+        product.image = imageUrl || product.image;
         await product.save();
         res.json({ message: 'Products updated successfully', product });
     } catch (error) {
