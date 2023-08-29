@@ -30,6 +30,9 @@ exports.addItem = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(422).json({ error: 'Product ID is required' });
+        }
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
@@ -57,6 +60,9 @@ exports.updateItem = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(422).json({ error: 'Product ID is required' });
+        }
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
@@ -82,6 +88,9 @@ exports.removeItem = async (req, res) => {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
+        }
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(422).json({ error: 'Product ID is required' });
         }
         const cartItemIndex = user.cart.findIndex(item => item.product.toString() === productId && item.size === size);
         if (cartItemIndex === -1) {

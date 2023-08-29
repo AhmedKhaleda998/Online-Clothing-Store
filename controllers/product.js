@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const mongoose = require('mongoose');
+
 const { validationResult } = require('express-validator');
 
 const Product = require('../models/product');
@@ -53,6 +55,9 @@ exports.create = async (req, res, next) => {
 exports.view = async (req, res, next) => {
     try {
         const productId = req.params.productId;
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(422).json({ error: 'Product ID is required' });
+        }
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
@@ -71,6 +76,9 @@ exports.update = async (req, res, next) => {
     }
     try {
         const productId = req.params.productId;
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(422).json({ error: 'Product ID is required' });
+        }
         const { name, price, size, description, gender, collectionSeason } = req.body;
         let imageUrl;
         const product = await Product.findById(productId).populate('creator');
@@ -106,6 +114,9 @@ exports.update = async (req, res, next) => {
 exports.delete = async (req, res, next) => {
     try {
         const productId = req.params.productId;
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(422).json({ error: 'Product ID is required' });
+        }
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
@@ -132,6 +143,41 @@ exports.delete = async (req, res, next) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+exports.search = async (req, res, next) => {
+    try {
+        const keyword = req.query.keyword || '';
+        const results = await Product.find({
+            $or: [
+                { name: { $regex: keyword, $options: 'i' } },
+                { description: { $regex: keyword, $options: 'i' } },
+                { gender: { $regex: keyword, $options: 'i' } },
+                { collectionSeason: { $regex: keyword, $options: 'i' } },
+            ],
+        });
+        res.json({ message: 'Products fetched successfully', keyword, results });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+exports.filter = async (req, res, next) => {
+    try {
+        const keyword = req.params.keyword || '';
+        const results = await Product.find({
+            $or: [
+                { gender: { $regex: keyword, $options: 'i' } },
+                { collectionSeason: { $regex: keyword, $options: 'i' } },
+            ],
+        });
+        res.json({ message: 'Products fetched successfully', collection: keyword, results });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 
 const clearImage = filePath => {
     filePath = path.join(__dirname, '..', filePath);

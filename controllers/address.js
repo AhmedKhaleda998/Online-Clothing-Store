@@ -3,10 +3,6 @@ const { validationResult } = require('express-validator');
 const User = require('../models/user');
 
 exports.viewAll = async (req, res, next) => {
-    if (req.userRole !== 'customer') {
-        return res.status(403).json({ error: 'Not Authorized' });
-    }
-
     const userId = req.userId;
     try {
         const user = await User.findById(userId).populate('addresses');
@@ -21,9 +17,6 @@ exports.viewAll = async (req, res, next) => {
 };
 
 exports.add = async (req, res, next) => {
-    if (req.userRole !== 'customer') {
-        return res.status(403).json({ error: 'Not Authorized' });
-    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(422).json({ error: errors.array()[0].msg });
@@ -53,9 +46,6 @@ exports.add = async (req, res, next) => {
 };
 
 exports.view = async (req, res, next) => {
-    if (req.userRole !== 'customer') {
-        return res.status(403).json({ error: 'Not Authorized' });
-    }
     const userId = req.userId;
     try {
         const user = await User.findById(userId).populate('addresses');
@@ -75,9 +65,6 @@ exports.view = async (req, res, next) => {
 };
 
 exports.update = async (req, res, next) => {
-    if (req.userRole !== 'customer') {
-        return res.status(403).json({ error: 'Not Authorized' });
-    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(422).json({ error: errors.array()[0].msg });
@@ -109,9 +96,6 @@ exports.update = async (req, res, next) => {
 };
 
 exports.remove = async (req, res, next) => {
-    if (req.userRole !== 'customer') {
-        return res.status(403).json({ error: 'Not Authorized' });
-    }
     const userId = req.userId;
     try {
         const user = await User.findById(userId).populate('addresses');

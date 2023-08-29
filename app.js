@@ -11,7 +11,8 @@ const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const orderRoutes = require('./routes/order');
 const contactRoutes = require('./routes/contact');
-const addressRoutes = require('./routes/address'); 
+const addressRoutes = require('./routes/address');
+const errorController = require('./controllers/error');
 
 const multerConfig = require('./configurations/multer');
 
@@ -28,12 +29,14 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
+
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/cart', cartRoutes);
 app.use('/orders', orderRoutes);
 app.use('/contact', contactRoutes);
 app.use('/address', addressRoutes);
+app.use(errorController.get404);
 
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
