@@ -4,6 +4,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 require('dotenv').config();
 
 const productRoutes = require('./routes/product');
@@ -18,6 +21,9 @@ const multerConfig = require('./configurations/multer');
 
 const app = express();
 
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined', { stream: accessLogStream }));
 app.use(bodyParser.json());
 app.use(multer({
     storage: multerConfig.fileStorage, fileFilter: multerConfig.fileFilter
