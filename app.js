@@ -23,7 +23,7 @@ const app = express();
 
 app.use(helmet());
 app.use(compression());
-app.use(morgan('combined', { stream: accessLogStream }));
+// app.use(morgan('combined', { stream: accessLogStream }));
 app.use(bodyParser.json());
 app.use(multer({
     storage: multerConfig.fileStorage, fileFilter: multerConfig.fileFilter
