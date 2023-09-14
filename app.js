@@ -4,7 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const cors = require('cors')
+const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
@@ -22,7 +22,7 @@ const multerConfig = require('./configurations/multer');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(compression());
 // app.use(morgan('combined', { stream: accessLogStream }));
 app.use(bodyParser.json());
@@ -30,6 +30,7 @@ app.use(multer({
     storage: multerConfig.fileStorage, fileFilter: multerConfig.fileFilter
 }).single('image'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
 // app.use((req, res, next) => {
 //     res.setHeader('Access-Control-Allow-Origin', '*');
 //     res.setHeader('Access-Control-Allow-Methods', '*');
