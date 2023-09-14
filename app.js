@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const cors = require('cors')
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
@@ -29,12 +30,14 @@ app.use(multer({
     storage: multerConfig.fileStorage, fileFilter: multerConfig.fileFilter
 }).single('image'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', '*');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    next();
-});
+// app.use((req, res, next) => {
+//     res.setHeader('Access-Control-Allow-Origin', '*');
+//     res.setHeader('Access-Control-Allow-Methods', '*');
+//     res.setHeader('Access-Control-Allow-Headers', '*');
+//     next();
+// });
+
+app.use(cors());
 
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
