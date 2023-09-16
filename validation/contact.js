@@ -12,7 +12,7 @@ exports.info = () => {
             .normalizeEmail(),
         body('phone')
             .notEmpty().withMessage('Phone number is required')
-            .isLength({ min: 11, max: 11 }).withMessage('Phone must be 11 digits long')
+            .isLength({ min: 7, max: 15 }).withMessage('Phone must be at least 7 digits long')
             .isNumeric().withMessage('Phone must be numeric')
             .trim(),
         body('message')

@@ -20,7 +20,7 @@ exports.isAddress = () => {
             .trim(),
         body('phone')
             .isNumeric().withMessage('Phone must be numeric')
-            .isLength({ min: 11, max: 11 }).withMessage('Phone must be 11 digits long')
+            .isLength({ min: 7, max: 15 }).withMessage('Phone must be at least 7 digits long')
             .trim(),
     ];
 };
