@@ -19,8 +19,8 @@ exports.product = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ['men', 'women', 'unisex'],
-        default: 'unisex',
+        enum: ['masculine', 'feminine', 'neutral'],
+        default: 'neutral',
         required: true,
     },
     collectionSeason: {
