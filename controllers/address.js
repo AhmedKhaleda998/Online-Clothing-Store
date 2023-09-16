@@ -52,7 +52,7 @@ exports.view = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const addressId = req.params.addressId;
+        const {addressId} = req.params;
         const address = user.addresses.find((address) => address._id.toString() === addressId);
         if (!address) {
             return res.status(404).json({ error: 'Address not found' });
@@ -75,7 +75,7 @@ exports.update = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const addressId = req.params.addressId;
+        const {addressId} = req.params;
         const address = user.addresses.find((address) => address._id.toString() === addressId);
         if (!address) {
             return res.status(404).json({ error: 'Address not found' });
@@ -102,10 +102,9 @@ exports.remove = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const addressId = req.params.addressId;
+        const { addressId } = req.params;
         const address = user.addresses.find((address) => address._id.toString() === addressId);
         if (!address) {
-            s
             return res.status(404).json({ error: 'Address not found' });
         }
         user.addresses.pull(addressId);
