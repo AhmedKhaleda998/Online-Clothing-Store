@@ -28,7 +28,7 @@ exports.isUser = () => {
             .withMessage('Password must be alphanumeric (contain at least one uppercase letter, one lowercase letter, and one number)')
             .trim(),
         body('role')
-            .notEmpty().withMessage('Role is required')
+            .optional()
             .isIn(['customer', 'admin']).withMessage('Role must be customer | admin'),
     ];
 };

@@ -10,7 +10,10 @@ exports.register = async (req, res) => {
             return res.status(422).json({ error: errors.array()[0].msg });
         }
         const { name, email, password } = req.body;
-        const role = req.body.role | 'customer';
+        if (!req.body.role) {
+            req.body.role = 'customer';
+        }
+        const role = req.body.role;
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });
