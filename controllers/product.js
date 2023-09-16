@@ -155,7 +155,7 @@ exports.search = async (req, res, next) => {
                 { collectionSeason: { $regex: keyword, $options: 'i' } },
             ],
         });
-        res.json({ message: 'Products fetched successfully', keyword, results });
+        res.json({ message: 'Products fetched successfully', keyword, products: results });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -171,7 +171,7 @@ exports.filter = async (req, res, next) => {
                 { collectionSeason: { $regex: keyword, $options: 'i' } },
             ],
         });
-        res.json({ message: 'Products fetched successfully', collection: keyword, results });
+        res.json({ message: 'Products fetched successfully', collection: keyword, products: results });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
