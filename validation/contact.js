@@ -4,6 +4,7 @@ exports.info = () => {
     return [
         body('name')
             .notEmpty().withMessage('Name is required')
+            .isAlpha().withMessage('Name must be alphabetic')
             .isLength({ min: 3, max: 512 }).withMessage('Name must be at least 3 characters long')
             .trim(),
         body('email')
