@@ -19,7 +19,7 @@ exports.product = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ['male', 'female', 'unisex'],
+        enum: ['men', 'women', 'unisex'],
         default: 'unisex',
         required: true,
     },

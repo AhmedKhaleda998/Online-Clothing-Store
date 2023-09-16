@@ -14,7 +14,7 @@ exports.isProduct = () => {
             .isLength({ min: 3, max: 1024 }).withMessage('Description must be at least 3 characters long')
             .trim(),
         body('gender')
-            .isIn(['male', 'female', 'unisex']).withMessage('gender must be male | female | unisex'),
+            .isIn(['men', 'women', 'unisex']).withMessage('gender must be men | women | unisex'),
         body('collectionSeason')
             .isAlpha().withMessage('Collection must be alphabetic')
             .trim(),
