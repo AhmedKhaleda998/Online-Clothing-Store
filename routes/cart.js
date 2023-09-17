@@ -11,6 +11,6 @@ router.post('/:productId', isAuth, checkUser.isCustomer, cartController.addItem)
 
 router.put('/:productId', isAuth, checkUser.isCustomer, cartController.updateItem);
 
-router.delete('/:productId/:size', isAuth, checkUser.isCustomer, cartController.removeItem);
+router.delete('/:productId', isAuth, checkUser.isCustomer, cartController.removeItem);
 
 module.exports = router;
