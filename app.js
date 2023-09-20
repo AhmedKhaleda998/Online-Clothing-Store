@@ -38,14 +38,7 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 //     next();
 // });
 
-const corsOptions = {
-    origin: process.env.FRONTEND_URL, // Replace with your frontend URL
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-    optionsSuccessStatus: 204,
-  };
-  
-  app.use(cors(corsOptions));
+app.use(cors());
 
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
