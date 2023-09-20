@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const stripe = require('stripe')(process.env.STRIPE_KEY);
+
 
 const Order = require('../models/order');
 const Product = require('../models/product');
@@ -61,6 +63,22 @@ exports.create = async (req, res) => {
             totalAmount,
             shippingAddress: address,
         });
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: products.map((product) => {
+                return {
+                    name: product.name,
+                    description: product.size,
+                    amount: product.price * 100,
+                    currency: 'egp',
+                    quantity: product.quantity,
+                };
+            }),
+            mode: 'payment',
+            success_url: `${process.env.FRONTEND_URL}`,
+            cancel_url: `${process.env.FRONTEND_URL}`,
+        });
+        // order.paymentIntentId = session.payment_intent;
         user.cart = [];
         await user.save();
         await order.save();
