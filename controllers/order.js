@@ -105,7 +105,7 @@ exports.create = async (req, res) => {
             }
             res.json({ message: 'Email sent successfully', info });
         });
-        res.status(201).json({ message: 'Order created successfully', order });
+        res.status(201).json({ message: 'Order created successfully', order, sessionId: session.id });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal Server Error' });
