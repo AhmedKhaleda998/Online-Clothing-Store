@@ -65,13 +65,16 @@ exports.create = async (req, res) => {
         });
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items: products.map((product) => {
+            line_items: products.map(p => {
                 return {
-                    name: product.name,
-                    description: product.size,
-                    amount: product.price * 100,
-                    currency: 'egp',
-                    quantity: product.quantity,
+                    price_data: {
+                        currency: 'egp',
+                        unit_amount: p.price * 100,
+                        product_data: {
+                            name: p.name,
+                        },
+                    },
+                    quantity: p.quantity,
                 };
             }),
             mode: 'payment',
