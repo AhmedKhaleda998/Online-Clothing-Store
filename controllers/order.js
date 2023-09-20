@@ -34,11 +34,6 @@ exports.getCheckoutSession = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const { addressId } = req.body;
-        const address = user.addresses.find((address) => address._id.toString() === addressId);
-        if (!address) {
-            return res.status(404).json({ error: 'Address not found' });
-        }
         const cartProducts = user.cart;
         let products = [];
         let totalAmount = 0;
