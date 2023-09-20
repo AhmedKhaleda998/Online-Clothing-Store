@@ -11,4 +11,6 @@ router.get('/', isAuth, checkUser.isCustomer, orderController.view);
 
 router.post('/', isAuth, checkUser.isCustomer, orderController.create);
 
+router.get('/checkout', isAuth, checkUser.isCustomer, orderController.getCheckoutSession);
+
 module.exports = router;

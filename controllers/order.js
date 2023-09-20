@@ -27,6 +27,35 @@ exports.view = async (req, res) => {
     }
 };
 
+exports.getCheckoutSession = async (req, res) => {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: products.map(p => {
+                return {
+                    price_data: {
+                        currency: 'egp',
+                        unit_amount: p.price * 100,
+                        product_data: {
+                            name: p.name,
+                        },
+                    },
+                    quantity: p.quantity,
+                };
+            }),
+            mode: 'payment',
+            success_url: `${process.env.FRONTEND_URL}`,
+            cancel_url: `${process.env.FRONTEND_URL}`,
+        });
+        // order.paymentIntentId = session.payment_intent;
+        // await order.save();
+        res.status(200).json({ message: 'Checkout session created successfully', sessionId: session.id });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 exports.create = async (req, res) => {
     const userId = req.userId;
     try {
@@ -63,25 +92,6 @@ exports.create = async (req, res) => {
             totalAmount,
             shippingAddress: address,
         });
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: products.map(p => {
-                return {
-                    price_data: {
-                        currency: 'egp',
-                        unit_amount: p.price * 100,
-                        product_data: {
-                            name: p.name,
-                        },
-                    },
-                    quantity: p.quantity,
-                };
-            }),
-            mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL}`,
-            cancel_url: `${process.env.FRONTEND_URL}`,
-        });
-        // order.paymentIntentId = session.payment_intent;
         user.cart = [];
         await user.save();
         await order.save();
