@@ -27,7 +27,7 @@ exports.add = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const { addressLine, country, city, state, postalCode, phone } = req.body;
+        const { addressLine, country, city, state, postalCode, phone, isDefault } = req.body;
         const address = {
             addressLine,
             country,
@@ -35,7 +35,19 @@ exports.add = async (req, res, next) => {
             state,
             postalCode,
             phone,
+            isDefault,
         };
+        if (isDefault) {
+            if (user.addresses.length > 0) {
+                user.addresses.forEach((address) => {
+                    address.isDefault = false;
+                });
+            }
+        } else {
+            if (user.addresses.length < 1) {
+                address.isDefault = true;
+            }
+        }
         user.addresses.push(address);
         await user.save();
         res.status(201).json({ message: 'Address added successfully', address });
@@ -52,7 +64,7 @@ exports.view = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const {addressId} = req.params;
+        const { addressId } = req.params;
         const address = user.addresses.find((address) => address._id.toString() === addressId);
         if (!address) {
             return res.status(404).json({ error: 'Address not found' });
@@ -75,18 +87,30 @@ exports.update = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const {addressId} = req.params;
+        const { addressId } = req.params;
         const address = user.addresses.find((address) => address._id.toString() === addressId);
         if (!address) {
             return res.status(404).json({ error: 'Address not found' });
         }
-        const { addressLine, country, city, state, postalCode, phone } = req.body;
+        const { addressLine, country, city, state, postalCode, phone, isDefault } = req.body;
         address.addressLine = addressLine || address.addressLine;
         address.country = country || address.country;
         address.city = city || address.city;
         address.state = state || address.state;
         address.postalCode = postalCode || address.postalCode;
         address.phone = phone || address.phone;
+        if (isDefault) {
+            if (user.addresses.length > 0) {
+                user.addresses.forEach((address) => {
+                    address.isDefault = false;
+                });
+            }
+        } else {
+            if (user.addresses.length === 1) {
+                address.isDefault = true;
+            }
+        }
+        address.isDefault = isDefault;
         await user.save();
         res.status(200).json({ message: 'Address updated successfully', address });
     } catch (error) {
