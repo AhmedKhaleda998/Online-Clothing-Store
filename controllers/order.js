@@ -28,13 +28,41 @@ exports.view = async (req, res) => {
 };
 
 exports.getCheckoutSession = async (req, res) => {
+    const userId = req.userId;
     try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const { addressId } = req.body;
+        const address = user.addresses.find((address) => address._id.toString() === addressId);
+        if (!address) {
+            return res.status(404).json({ error: 'Address not found' });
+        }
+        const cartProducts = user.cart;
+        let products = [];
+        let totalAmount = 0;
+        for (const cartItem of cartProducts) {
+            const product = await Product.findById(cartItem.product);
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+            const productPrice = product.price * cartItem.quantity;
+            totalAmount += productPrice;
+            products.push({
+                product: cartItem.product,
+                name: product.name,
+                quantity: cartItem.quantity,
+                size: cartItem.size,
+                price: productPrice,
+            });
+        }
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: products.map(p => {
                 return {
                     price_data: {
-                        currency: 'egp',
+                        currency: 'usd',
                         unit_amount: p.price * 100,
                         product_data: {
                             name: p.name,
