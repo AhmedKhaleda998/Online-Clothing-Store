@@ -89,15 +89,15 @@ exports.getCheckoutSession = async (req, res) => {
 exports.create = async (req, res) => {
     const userId = req.userId;
     try {
-        const { session_id } = req.body;
+        const { sessionId } = req.body;
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        if (!session_id) {
+        if (!sessionId) {
             return res.status(400).json({ error: 'Session ID is required' });
         }
-        const session = await stripe.checkout.sessions.retrieve(session_id);
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (!session) {
             return res.status(404).json({ error: 'Session not found' });
         }
