@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 const stripe = require('stripe')(process.env.STRIPE_KEY);
-
+const { ulid } = require('ulid');
 
 const Order = require('../models/order');
 const Product = require('../models/product');
@@ -34,6 +34,12 @@ exports.getCheckoutSession = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
+        if (user.cart.length === 0) {
+            return res.status(400).json({ error: 'Cart is empty' });
+        }
+        if (!user.addresses || user.addresses.length === 0) {
+            return res.status(400).json({ error: 'Address is required' });
+        }
         const cartProducts = user.cart;
         let products = [];
         let totalAmount = 0;
@@ -51,6 +57,9 @@ exports.getCheckoutSession = async (req, res) => {
                 size: cartItem.size,
                 price: productPrice,
             });
+        }
+        if (products.length === 0 || totalAmount <= 0) {
+            return res.status(400).json({ error: 'Cart is empty' });
         }
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -70,8 +79,6 @@ exports.getCheckoutSession = async (req, res) => {
             success_url: `${process.env.CLIENT_URL}/orders/success`,
             cancel_url: `${process.env.CLIENT_URL}/orders/cancel`,
         });
-        // order.paymentIntentId = session.payment_intent;
-        // await order.save();
         res.status(200).json({ message: 'Checkout session created successfully', sessionId: session.id });
     } catch (error) {
         console.log(error);
@@ -82,16 +89,29 @@ exports.getCheckoutSession = async (req, res) => {
 exports.create = async (req, res) => {
     const userId = req.userId;
     try {
+        const { session_id } = req.body;
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        const { addressId } = req.body;
-        const address = user.addresses.find((address) => address._id.toString() === addressId);
+        if (!session_id) {
+            return res.status(400).json({ error: 'Session ID is required' });
+        }
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+        if (session.payment_status !== 'paid') {
+            return res.status(400).json({ error: 'Payment is not completed' });
+        }
+        const address = await user.addresses.find(a => a.isDefault);
         if (!address) {
-            return res.status(404).json({ error: 'Address not found' });
+            address = user.addresses[0];
         }
         const cartProducts = user.cart;
+        if (cartProducts.length === 0) {
+            return res.status(400).json({ error: 'Cart is empty' });
+        }
         let products = [];
         let totalAmount = 0;
         for (const cartItem of cartProducts) {
@@ -109,11 +129,16 @@ exports.create = async (req, res) => {
                 price: productPrice,
             });
         }
+        if (products.length === 0 || totalAmount <= 0) {
+            return res.status(400).json({ error: 'Cart is empty' });
+        }
         const order = new Order({
+            number: ulid(),
             user: userId,
             products,
             totalAmount,
             shippingAddress: address,
+            paymentIntentId: session.payment_intent,
         });
         user.cart = [];
         await user.save();
@@ -138,7 +163,10 @@ exports.create = async (req, res) => {
             }
             res.json({ message: 'Email sent successfully', info });
         });
-        res.status(201).json({ message: 'Order created successfully', order, sessionId: session.id });
+        if (!address || !user.addresses || user.addresses.length === 0) {
+            return res.status(201).json({ error: 'Order created successfully but with no address, refer to customer service' });
+        }
+        res.status(201).json({ message: 'Order created successfully', order });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal Server Error' });

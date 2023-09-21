@@ -27,6 +27,10 @@ const orderItem = new mongoose.Schema({
 });
 
 exports.order = new mongoose.Schema({
+    number: {
+        type: String,
+        required: true,
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -38,6 +42,10 @@ exports.order = new mongoose.Schema({
         required: true,
     },
     shippingAddress: addressSchema.address,
+    paymentIntentId: {
+        type: String,
+        required: true,
+    },
 },
     {
         timestamps: true,
