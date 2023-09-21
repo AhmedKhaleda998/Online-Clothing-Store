@@ -67,8 +67,8 @@ exports.getCheckoutSession = async (req, res) => {
                 };
             }),
             mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL}`,
-            cancel_url: `${process.env.FRONTEND_URL}`,
+            success_url: `${process.env.CLIENT_URL}/orders/success`,
+            cancel_url: `${process.env.CLIENT_URL}/orders/cancel`,
         });
         // order.paymentIntentId = session.payment_intent;
         // await order.save();
