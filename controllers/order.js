@@ -27,7 +27,7 @@ exports.view = async (req, res) => {
     }
 };
 
-exports.getCheckoutSession = async (req, res) => {
+exports.checkout = async (req, res) => {
     const userId = req.userId;
     try {
         const user = await User.findById(userId);
@@ -71,12 +71,12 @@ exports.getCheckoutSession = async (req, res) => {
                         product_data: {
                             name: p.name,
                         },
+                        quantity: p.quantity,
                     },
-                    quantity: p.quantity,
                 };
             }),
             mode: 'payment',
-            success_url: `${process.env.SERVER_URL}/orders`,
+            success_url: `${process.env.SERVER_URL}/orders?userId${userId}&sessionId=${session.id}}`,
             cancel_url: `${process.env.SERVER_URL}/orders/cancel`,
         });
         res.status(200).json({ message: 'Checkout session created successfully', sessionId: session.id });
@@ -86,18 +86,20 @@ exports.getCheckoutSession = async (req, res) => {
     }
 };
 
-exports.create = async (req, res) => {
-    const userId = req.userId;
+exports.success = async (req, res) => {
     try {
-        const { session_id } = req.query;
+        const { userId, sessionId } = req.query;
         const user = await User.findById(userId);
         if (!user) {
             return res.redirect(`${process.env.CLIENT_URL}/cancel?error=User not found`);
         }
-        if (!session_id) {
+        if (user.role !== 'customer') {
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=You are not authorized to perform this action`);
+        }
+        if (!sessionId) {
             return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session ID not found`)
         }
-        const session = await stripe.checkout.sessions.retrieve(session_id);
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (!session) {
             return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session not found`);
         }
@@ -233,4 +235,8 @@ const emailHTML = (user, order) => {
             </body>
         </html>
         `;
+}
+
+exports.cancel = (req, res) => {
+    res.redirect(`${process.env.CLIENT_URL}/cancel?error=Payment cancelled`);
 }
