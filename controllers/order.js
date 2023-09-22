@@ -67,7 +67,7 @@ exports.getCheckoutSession = async (req, res) => {
                 return {
                     price_data: {
                         currency: 'usd',
-                        unit_amount : p.price * 100,
+                        unit_amount: p.price * 100,
                         product_data: {
                             name: p.name,
                         },
@@ -89,15 +89,15 @@ exports.getCheckoutSession = async (req, res) => {
 exports.create = async (req, res) => {
     const userId = req.userId;
     try {
-        const { sessionId } = req.body;
+        const { session_id } = req.query;
         const user = await User.findById(userId);
         if (!user) {
             return res.redirect(`${process.env.CLIENT_URL}/cancel?error=User not found`);
         }
-        if (!sessionId) {
+        if (!session_id) {
             return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session ID not found`)
         }
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        const session = await stripe.checkout.sessions.retrieve(session_id);
         if (!session) {
             return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session not found`);
         }
