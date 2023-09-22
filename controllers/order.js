@@ -67,7 +67,7 @@ exports.getCheckoutSession = async (req, res) => {
                 return {
                     price_data: {
                         currency: 'usd',
-                        unit_amount: p.price * 100,
+                        unit_amount : p.price * 100,
                         product_data: {
                             name: p.name,
                         },
@@ -76,8 +76,8 @@ exports.getCheckoutSession = async (req, res) => {
                 };
             }),
             mode: 'payment',
-            success_url: `${process.env.CLIENT_URL}/orders/success`,
-            cancel_url: `${process.env.CLIENT_URL}/orders/cancel`,
+            success_url: `${process.env.SERVER_URL}/orders`,
+            cancel_url: `${process.env.SERVER_URL}/orders/cancel`,
         });
         res.status(200).json({ message: 'Checkout session created successfully', sessionId: session.id });
     } catch (error) {
@@ -92,17 +92,17 @@ exports.create = async (req, res) => {
         const { sessionId } = req.body;
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=User not found`);
         }
         if (!sessionId) {
-            return res.status(400).json({ error: 'Session ID is required' });
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session ID not found`)
         }
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (!session) {
-            return res.status(404).json({ error: 'Session not found' });
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session not found`);
         }
         if (session.payment_status !== 'paid') {
-            return res.status(400).json({ error: 'Payment is not completed' });
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Payment not completed`);
         }
         const address = await user.addresses.find(a => a.isDefault);
         if (!address) {
@@ -110,14 +110,14 @@ exports.create = async (req, res) => {
         }
         const cartProducts = user.cart;
         if (cartProducts.length === 0) {
-            return res.status(400).json({ error: 'Cart is empty' });
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Cart is empty`);
         }
         let products = [];
         let totalAmount = 0;
         for (const cartItem of cartProducts) {
             const product = await Product.findById(cartItem.product);
             if (!product) {
-                return res.status(404).json({ error: 'Product not found' });
+                return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Product not found`);
             }
             const productPrice = product.price * cartItem.quantity;
             totalAmount += productPrice;
@@ -130,7 +130,7 @@ exports.create = async (req, res) => {
             });
         }
         if (products.length === 0 || totalAmount <= 0) {
-            return res.status(400).json({ error: 'Cart is empty' });
+            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Cart is empty`);
         }
         const order = new Order({
             number: ulid(),
@@ -159,17 +159,17 @@ exports.create = async (req, res) => {
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error(error);
-                return res.status(500).send('Internal Server Error');
+                return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Email not sent`)
             }
-            res.json({ message: 'Email sent successfully', info });
+            res.redirect(`${process.env.CLIENT_URL}/orders/success`);
         });
         if (!address || !user.addresses || user.addresses.length === 0) {
-            return res.status(201).json({ error: 'Order created successfully but with no address, refer to customer service' });
+            res.redirect(`${process.env.CLIENT_URL}/orders/success?message=Order created successfully. Please add an address to your account to complete the order.`);
         }
-        res.status(201).json({ message: 'Order created successfully', order });
+        res.redirect(`${process.env.CLIENT_URL}/orders/success`);
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.redirect(`${process.env.CLIENT_URL}/cancel?error=Internal Server Error`);
     }
 };
 
