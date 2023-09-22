@@ -42,41 +42,37 @@ exports.checkout = async (req, res) => {
         }
         const cartProducts = user.cart;
         let products = [];
-        let totalAmount = 0;
         for (const cartItem of cartProducts) {
             const product = await Product.findById(cartItem.product);
             if (!product) {
                 return res.status(404).json({ error: 'Product not found' });
             }
-            const productPrice = product.price * cartItem.quantity;
-            totalAmount += productPrice;
             products.push({
                 product: cartItem.product,
                 name: product.name,
                 quantity: cartItem.quantity,
                 size: cartItem.size,
-                price: productPrice,
+                price: product.price,
             });
         }
-        if (products.length === 0 || totalAmount <= 0) {
+        if (products.length === 0) {
             return res.status(400).json({ error: 'Cart is empty' });
         }
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items: products.map(p => {
-                return {
-                    price_data: {
-                        currency: 'usd',
-                        unit_amount: p.price * 100,
-                        product_data: {
-                            name: p.name,
-                        },
-                        quantity: p.quantity,
+            line_items: products.map(product => ({
+                price_data: {
+                    currency: 'egp',
+                    unit_amount: product.price * 100,
+                    product_data: {
+                        name: product.name,
+                        description: product.size,
                     },
-                };
-            }),
+                },
+                quantity: product.quantity,
+            })),
             mode: 'payment',
-            success_url: `${process.env.SERVER_URL}/orders?userId${userId}&sessionId=${session.id}}`,
+            success_url: `${process.env.SERVER_URL}/orders/success?userId=${userId}&sessionId={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.SERVER_URL}/orders/cancel`,
         });
         res.status(200).json({ message: 'Checkout session created successfully', sessionId: session.id });
@@ -91,20 +87,20 @@ exports.success = async (req, res) => {
         const { userId, sessionId } = req.query;
         const user = await User.findById(userId);
         if (!user) {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=User not found`);
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=User not found`);
         }
         if (user.role !== 'customer') {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=You are not authorized to perform this action`);
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=You are not authorized to perform this action`);
         }
         if (!sessionId) {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session ID not found`)
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Session ID not found`);
         }
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (!session) {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Session not found`);
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Session not found`);
         }
         if (session.payment_status !== 'paid') {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Payment not completed`);
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Payment not completed`);
         }
         const address = await user.addresses.find(a => a.isDefault);
         if (!address) {
@@ -112,14 +108,14 @@ exports.success = async (req, res) => {
         }
         const cartProducts = user.cart;
         if (cartProducts.length === 0) {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Cart is empty`);
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Cart is empty`);
         }
         let products = [];
         let totalAmount = 0;
         for (const cartItem of cartProducts) {
             const product = await Product.findById(cartItem.product);
             if (!product) {
-                return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Product not found`);
+                return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Product not found`);
             }
             const productPrice = product.price * cartItem.quantity;
             totalAmount += productPrice;
@@ -132,7 +128,7 @@ exports.success = async (req, res) => {
             });
         }
         if (products.length === 0 || totalAmount <= 0) {
-            return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Cart is empty`);
+            return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Cart is empty`);
         }
         const order = new Order({
             number: ulid(),
@@ -161,7 +157,7 @@ exports.success = async (req, res) => {
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error(error);
-                return res.redirect(`${process.env.CLIENT_URL}/cancel?error=Email not sent`)
+                return res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Email not sent`);
             }
             res.redirect(`${process.env.CLIENT_URL}/orders/success`);
         });
@@ -171,7 +167,7 @@ exports.success = async (req, res) => {
         res.redirect(`${process.env.CLIENT_URL}/orders/success`);
     } catch (error) {
         console.log(error);
-        res.redirect(`${process.env.CLIENT_URL}/cancel?error=Internal Server Error`);
+        res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Internal Server Error`);
     }
 };
 
@@ -238,5 +234,5 @@ const emailHTML = (user, order) => {
 }
 
 exports.cancel = (req, res) => {
-    res.redirect(`${process.env.CLIENT_URL}/cancel?error=Payment cancelled`);
+    res.redirect(`${process.env.CLIENT_URL}/orders/cancel?error=Payment cancelled`);
 }

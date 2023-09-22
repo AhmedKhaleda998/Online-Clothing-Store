@@ -44,7 +44,6 @@ exports.order = new mongoose.Schema({
     shippingAddress: addressSchema.address,
     paymentIntentId: {
         type: String,
-        required: true,
     },
 },
     {
